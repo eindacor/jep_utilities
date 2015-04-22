@@ -77,6 +77,29 @@ namespace jep
 		float lowest_value_passed;
 		signed long count;
 	};
+
+	class date
+	{
+	public:
+		date(){};
+		~date(){};
+
+		enum class month {JAN=0, FEB=1, MAR=2, APR=3, MAY=4, JUN=5, JUL=6, AUG=7, SEP=8, OCT=9, NOV=10, DEC=11};
+		enum class day {MON=0, TUE=1, WED=2, THU=3, FRI=4, SAT=5, SUN=6};
+		
+		day getDay() const { return day; }
+		month getMonth() const { return month; }
+		short getYear() const { return year; }
+
+		void setDay(jep::date::day n) { d_day = n; }
+		void setMonth() { return d_month; }
+		void setYear() { return d_year; }
+
+	private:
+		month d_month;
+		day d_day;
+		short d_year;
+	};
 }
 
 #endif
