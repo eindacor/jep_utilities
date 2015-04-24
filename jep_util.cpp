@@ -22,6 +22,22 @@ namespace jep
 		setData(y, m, d);
 	}
 
+	date::date(string s)
+	{
+		//dates must be in yyyy/mm/dd or yyyymmdd formats
+		s.erase(std::remove_if(s.begin(), s.end(), [](const char& c) {return c == '/'; }));
+
+		string s_year = s.substr(0, 4);
+		string s_month = s.substr(4, 2);
+		string s_day = s.substr(6, 2);
+
+		int year = std::stoi(s_year);
+		int month = std::stoi(s_month);
+		int day = std::stoi(s_day);
+
+		setData(year, month, day);
+	}
+
 	bool date::setData(int y, int m, int d)
 	{
 		leap_year = calcLeapYear(y);
@@ -246,4 +262,122 @@ namespace jep
 		else return false;
 	}
 
+	csv_file::csv_file(const char* file_path)
+	{
+		std::fstream file;
+		file.open(file_path, std::ifstream::in);
+
+		if (!file.is_open())
+		{
+			string error = "unable to open csv file: ";
+			error += file_path;
+			std::cout << error << std::endl;
+		}
+
+		bool first_line = true;
+		int row_counter = 0;
+
+		while (!file.eof())
+		{
+			string line;
+			std::getline(file, line, '\n');
+
+			vector<string> cells(getRowCells(line));
+
+			if (first_line && !cells.empty())
+			{
+				for (int i = 0; i < cells.size(); i++)
+					column_headers[i] = cells.at(i);
+
+				first_line = false;
+				column_count = cells.size();
+			}
+
+			//add cell data to respective column
+			for (int i = 0; i < cells.size(); i++)
+				column_data[i].push_back(cells.at(i));
+
+			if (!cells.empty())
+			{
+				row_data[row_counter] = cells;
+				row_headers[row_counter++] = cells.front();
+			}
+		}
+
+		row_count = row_counter;
+
+		file.close();
+	}
+
+	vector<string> csv_file::getRowCells(string line)
+	{
+		vector<string> row_cells;
+		bool in_quotes = false;
+		string current_cell = "";
+		for (int i = 0; i < line.size(); i++)
+		{
+			char c = line[i];
+			if (c == '\"')
+			{
+				in_quotes = !in_quotes;
+				continue;
+			}
+
+			bool add = !(c == ',' && !in_quotes);
+			bool end = (c == ',' && !in_quotes) || (i == line.size() - 1);
+
+			if (add)
+				current_cell += c;
+
+			if (end)
+			{
+				row_cells.push_back(current_cell);
+				current_cell = "";
+			}
+		}
+
+		return row_cells;
+	}
+
+	int csv_file::lookupRowIndexByHeader(string header) const
+	{
+		for (auto i : row_headers)
+		{
+			if (i.second == header)
+				return i.first;
+		}
+	}
+
+	int csv_file::lookupColumnIndexByHeader(string header) const
+	{
+		for (auto i : column_headers)
+		{
+			if (i.second == header)
+				return i.first;
+		}
+	}
+
+	vector< std::pair<string, string> > csv_file::getRowDataWithHeader(int index) const
+	{
+		vector<string> row = row_data.at(index);
+		vector< std::pair<string, string> > data;
+
+		//field data with corresponding header tag
+		for (int i = 0; i < row.size(); i++)
+			data.push_back(std::pair<string, string>(column_headers.at(i), row.at(i)));
+
+		return data;
+	}
+
+	vector< std::pair<string, string> > csv_file::getColumnDataWithHeader(int index) const
+	{
+		vector<string> column = column_data.at(index);
+		vector< std::pair<string, string> > data;
+
+		//field data with corresponding header tag
+		for (int i = 0; i < column.size(); i++)
+			data.push_back(std::pair<string, string>(row_headers.at(i), column.at(i)));
+
+		return data;
+	}
 }

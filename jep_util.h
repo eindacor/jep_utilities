@@ -6,6 +6,8 @@
 #include <list>
 #include <map>
 #include <iostream>
+#include <fstream>
+#include <algorithm>
 using std::string;
 using std::vector;
 using std::list;
@@ -88,6 +90,7 @@ namespace jep
 	{
 	public:
 		date(int y, int m, int d);
+		date(string s);
 		date() { setData(0, 1, 1); }
 		~date(){};
 
@@ -112,6 +115,11 @@ namespace jep
 			return (other.getDayOfYear() == day_of_year && other.getYear() == d_year);
 		}	
 
+		bool operator != (const date &other) const
+		{
+			return (other.getDayOfYear() != day_of_year || other.getYear() != d_year);
+		}
+
 	private:
 		unsigned short d_year;
 		month d_month;
@@ -126,6 +134,43 @@ namespace jep
 		bool setData(int y, int m, int d);
 
 		map<month, int> days_per_month;
+	};
+
+	class csv_file
+	{
+	public: 
+		csv_file(const char* file_path);
+		~csv_file(){};
+		vector<string> getRow(int index) const { return row_data.at(index); }
+		vector<string >getColumn(int index) const { return column_data.at(index); }
+		vector<string> getRow(string r_header) const { return getRow(lookupRowIndexByHeader(r_header)); }
+		vector<string> getColumn(string c_header) const { return getColumn(lookupColumnIndexByHeader(c_header)); }
+
+		vector< std::pair<string, string> > getRowDataWithHeader(int index) const;
+		vector< std::pair<string, string> > getColumnDataWithHeader(int index) const;
+		vector< std::pair<string, string> > getRowDataWithHeader(string r_header) const 
+			{ return getRowDataWithHeader(lookupRowIndexByHeader(r_header)); }
+		vector< std::pair<string, string> > getColumnDataWithHeader(string c_header) const 
+			{ return getColumnDataWithHeader(lookupColumnIndexByHeader(c_header)); }
+
+		int getRowCount() const { return row_count; }
+		int getColumnCount() const { return column_count; }
+
+		int lookupRowIndexByHeader(string header) const;
+		int lookupColumnIndexByHeader(string header) const;
+
+		string getCell(int x, int y) const { return column_data.at(x).at(y); }
+
+	private:
+		int column_count;
+		int row_count;	
+		map<unsigned, string> column_headers;
+		map<unsigned, string> row_headers;
+
+		map< unsigned, vector<string> > row_data;
+		map< unsigned, vector<string> > column_data;
+
+		vector<string> getRowCells(string line);
 	};
 }
 
