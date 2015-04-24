@@ -24,6 +24,12 @@ namespace jep
 
 	date::date(string s)
 	{
+		if (s.length() < 8 || s.length() > 10)
+		{
+			setData(0, -1, -1);
+			return;
+		}
+
 		//dates must be in yyyy/mm/dd or yyyymmdd formats
 		s.erase(std::remove_if(s.begin(), s.end(), [](const char& c) {return c == '/'; }));
 
