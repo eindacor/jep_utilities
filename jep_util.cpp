@@ -38,8 +38,8 @@ namespace jep
 		string s_day = s.substr(6, 2);
 
 		int year = std::stoi(s_year);
-		int month = std::stoi(s_month);
-		int day = std::stoi(s_day);
+		int month = (s_month == "??" ? -1 : std::stoi(s_month));
+		int day = (s_day == "??" ? -1 : std::stoi(s_day));
 
 		setData(year, month, day);
 	}
