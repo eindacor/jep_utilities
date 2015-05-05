@@ -119,6 +119,8 @@ namespace jep
 		{
 			return (other.getDayOfYear() != day_of_year || other.getYear() != d_year);
 		}
+		bool operator > (const date &other) const;
+		bool operator < (const date &other) const;
 
 	private:
 		unsigned short d_year;

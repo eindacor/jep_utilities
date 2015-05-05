@@ -206,6 +206,28 @@ namespace jep
 		}
 	}
 
+	bool date::operator > (const date &other) const
+	{
+		if (getYear() != other.getYear())
+			return getYear() > other.getYear();
+
+		if (getDayOfYear() != other.getDayOfYear())
+			return getDayOfYear() > other.getDayOfYear();
+
+		return false;
+	}
+
+	bool date::operator < (const date &other) const
+	{
+		if (getYear() != other.getYear())
+			return getYear() < other.getYear();
+
+		if (getDayOfYear() != other.getDayOfYear())
+			return getDayOfYear() < other.getDayOfYear();
+
+		return false;
+	}
+
 	const date& date::operator ++ (int)
 	{
 		if (day_of_week == UNKNOWN_DAY)
