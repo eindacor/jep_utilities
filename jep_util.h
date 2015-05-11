@@ -14,6 +14,7 @@ using std::list;
 using std::map;
 using std::cout;
 using std::endl;
+using std::pair;
 
 enum month { JAN = 1, FEB = 2, MAR = 3, APR = 4, MAY = 5, JUN = 6, JUL = 7, AUG = 8, SEP = 9, OCT = 10, NOV = 11, DEC = 12 , UNKNOWN_MONTH = -1};
 enum day_name { SUN = 0, MON = 1, TUE = 2, WED = 3, THU = 4, FRI = 5, SAT = 6, UNKNOWN_DAY = -1};
@@ -23,6 +24,7 @@ namespace jep
 	const bool stringInVector(string s, const vector<string> &vec);
 	const bool stringInList(string s, const list<string> &str);
 	const bool floatsAreEqual(float first, float second);
+	const pair<float, float> calculateLineFormula(pair<float, float> p1, pair<float, float> p2);
 
 	template<typename t>
 	void removeFromVector(vector<t> &vec, t target)
