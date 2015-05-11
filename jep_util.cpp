@@ -89,6 +89,48 @@ namespace jep
 		return intersections_left % 2 == 0;
 	}
 
+	bool pointInPolygon(const vector< pair<glm::vec3, glm::vec3> > &polygon_sides, const glm::vec2 &test_point)
+	{
+		pair<glm::vec2, glm::vec2> horizontal_line(test_point, test_point + glm::vec2(1.0f, 0.0f));
+
+		int intersections_left = 0;
+
+		for (vector< pair<glm::vec3, glm::vec3> >::const_iterator it = polygon_sides.cbegin(); it != polygon_sides.cend(); it++)
+		{
+			glm::vec3 first_point = (*it).first;
+			glm::vec3 second_point = (*it).second;
+
+			//skip horizontal lines, segments that don't cross the test line, and overlapping points
+			if ((first_point.y > test_point.y == second_point.y > test_point.y) ||		//segment does not cross the test plane
+				floatsAreEqual(first_point.y, second_point.y) ||						//segment is horizontal
+				first_point == second_point)											//points are overlapping
+				continue;
+
+			//if the line is vertical, determine x intersection and continue
+			if (floatsAreEqual(first_point.x, second_point.x))
+			{
+				if (first_point.x < test_point.x)
+					intersections_left++;
+
+				continue;
+			}
+
+			float delta_y(second_point.y - first_point.y);
+			float delta_x(second_point.x - first_point.x);
+			float slope = delta_y / delta_x;
+
+			float new_delta_y = test_point.y - first_point.y;
+			float new_delta_x = new_delta_y / slope;
+
+			float intersection_x = first_point.x + new_delta_x;
+
+			if (intersection_x < test_point.x)
+				intersections_left++;
+		}
+
+		return intersections_left % 2 == 0;
+	}
+
 	date::date(int y, int m, int d)
 	{
 		setData(y, m, d);
@@ -479,5 +521,46 @@ namespace jep
 			data.push_back(std::pair<string, string>(row_headers.at(i), column.at(i)));
 
 		return data;
+	}
+
+	const float getLineAngle(glm::vec2 first, glm::vec2 second)
+	{
+		//assumes line is going from first to second
+		//angle returned is counter-clockwise offset from horizontal axis to the right
+		if (floatsAreEqual(first.x, second.x))
+		{
+			if (first.y < second.y)
+				return 90.0f;
+
+			else return 270.0f;
+		}
+
+		if (floatsAreEqual(first.y, second.y))
+		{
+			if (first.x < second.x)
+				return 0.0f;
+
+			else return 180.0f;
+		}
+
+		float tangent = ((second.y - first.y) / (second.x - first.x));
+		float pi = 3.14159265;
+		float angle = atan(abs(tangent)) * (180 / pi);
+
+		if (tangent < 0)
+		{
+			if (first.x < second.x)
+				return 360.0f - angle;
+
+			else return 180.0f - angle;
+		}
+
+		else
+		{
+			if (first.x < second.x)
+				return angle;
+
+			else return 180.0f + angle;
+		}
 	}
 }

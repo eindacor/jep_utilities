@@ -28,6 +28,7 @@ namespace jep
 	const pair<float, float> calculateLineFormula(const glm::vec2 &first, const glm::vec2 &second);
 	const glm::vec2 getIntersection(const pair<glm::vec2, glm::vec2> &line_one, const pair<glm::vec2, glm::vec2> &line_two);
 	bool pointInPolygon(const std::vector<glm::vec2> &polygon_points, const glm::vec2 &test_point);
+	bool pointInPolygon(const vector< pair<glm::vec3, glm::vec3> > &polygon_sides, const glm::vec2 &test_point);
 
 	template<typename t>
 	void removeFromVector(vector<t> &vec, t target)
