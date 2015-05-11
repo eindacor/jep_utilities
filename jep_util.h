@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <glm.hpp>
 using std::string;
 using std::vector;
 using std::list;
@@ -24,7 +25,9 @@ namespace jep
 	const bool stringInVector(string s, const vector<string> &vec);
 	const bool stringInList(string s, const list<string> &str);
 	const bool floatsAreEqual(float first, float second);
-	const pair<float, float> calculateLineFormula(pair<float, float> p1, pair<float, float> p2);
+	const pair<float, float> calculateLineFormula(const glm::vec2 &first, const glm::vec2 &second);
+	const glm::vec2 getIntersection(const pair<glm::vec2, glm::vec2> &line_one, const pair<glm::vec2, glm::vec2> &line_two);
+	bool pointInPolygon(const std::vector<glm::vec2> &polygon_points, const glm::vec2 &test_point);
 
 	template<typename t>
 	void removeFromVector(vector<t> &vec, t target)

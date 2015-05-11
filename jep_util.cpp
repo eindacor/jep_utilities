@@ -17,142 +17,77 @@ namespace jep
 		return abs(first - second) < .00000001f;
 	}
 
-	const pair<float, float> calculateLineFormula(pair<float, float> p1, pair<float, float> p2)
+	const pair<float, float> calculateLineFormula(const glm::vec2 &first, const glm::vec2 &second)
 	{
-		if (floatsAreEqual(p1.first, p2.second))
-			return pair<float, float>(0.0f, p2.second);
+		if (floatsAreEqual(first.y, second.y))
+			return pair<float, float>(0.0f, second.y);
 
-		float multiplier = (p2.second - p1.second) / (p2.first - p1.first);
-		float y_offset = p1.second - (p1.first * multiplier);
+		float multiplier = (second.y - first.y) / (second.x - first.x);
+		float y_offset = first.y - (first.x * multiplier);
 		return pair<float, float>(multiplier, y_offset);
 	}
 
-	bool collisionCheck(std::vector <side> s, point p)
-{
-        std::vector <side> nodeSides;
- 
-        int toleft = 0;
-        int toright = 0;
- 
-        for (std::vector <side>::iterator i = s.begin(); i != s.end(); i++)
-        {
-		//if the side is horizontal, true if p.x is between x of 1st and 2nd, false if it's not
-		if ((*i).getFirst().getY() == (*i).getSecond().getY() && (*i).getFirst().getY() == p.getY())
+	const glm::vec2 getIntersection(const pair<glm::vec2, glm::vec2> &line_one, const pair<glm::vec2, glm::vec2> &line_two)
+	{
+		pair<float, float> line_one_formula = calculateLineFormula(line_one.first, line_one.second);
+		pair<float, float> line_two_formula = calculateLineFormula(line_two.first, line_two.second);
+
+		if (floatsAreEqual(line_one_formula.first, line_two_formula.first))
+			throw;
+
+		float lhs = line_one_formula.first - line_two_formula.first;
+		float rhs = line_two_formula.second - line_one_formula.second;
+
+		float x = rhs / lhs;
+		float y = (x * line_one_formula.first) + line_one_formula.second;
+		return glm::vec2(x, y);
+	}
+
+	bool pointInPolygon(const std::vector<glm::vec2> &polygon_points, const glm::vec2 &test_point)
+	{
+		pair<glm::vec2, glm::vec2> horizontal_line(test_point, test_point + glm::vec2(1.0f, 0.0f));
+
+		int intersections_left = 0;
+
+		for (std::vector<glm::vec2>::const_iterator it = polygon_points.cbegin(); it != polygon_points.cend(); it++)
 		{
-			if (p.getX() > (*i).getFirst().getX() && p.getX() < (*i).getSecond().getX() ||
-                   	    p.getX() < (*i).getFirst().getX() && p.getX() > (*i).getSecond().getX() )
+			std::vector<glm::vec2>::const_iterator next;
+
+			if (it + 1 == polygon_points.cend())
+				next = polygon_points.cbegin();
+
+			else next = it + 1;
+
+			//skip horizontal lines, segments that don't cross the test line, and overlapping points
+			if ((*it).y > test_point.y == (*next).y > test_point.y || floatsAreEqual((*it).y, (*next).y) || (*it) == (*next))
+				continue;
+
+			if (floatsAreEqual((*it).x, (*next).x))
 			{
-				return true;
+				if ((*it).x < test_point.x)
+					intersections_left++;
+
+				continue;
 			}
 
-			else
-			{
-				return false;
-			}
+			glm::vec2 first(*it);
+			glm::vec2 second(*next);
+
+			float delta_y(second.y - first.y);
+			float delta_x(second.x - first.x);
+			float slope = delta_y / delta_x;
+
+			float new_delta_y = test_point.y - first.y;
+			float new_delta_x = new_delta_y / slope;
+
+			float intersection_x = first.x + new_delta_x;
+
+			if (intersection_x < test_point.x)
+				intersections_left++;
 		}
 
-                //if the Y value of the point being tested is between the Y values of a side, add a node
-                if (p.getY() > (*i).getFirst().getY() && p.getY() < (*i).getSecond().getY() ||
-                    p.getY() < (*i).getFirst().getY() && p.getY() > (*i).getSecond().getY() )
-                {
-                  	std::cout << "Adding node based on this side: " <<
-				(*i).getFirst().getX() << ", " << (*i).getFirst().getY() << " -> " <<
-				(*i).getSecond().getX() << ", " << (*i).getSecond().getY() << 
-				".... point = " << p.getX() << ", " << p.getY() << std::endl;				
-
-			nodeSides.push_back( side ( (*i).getFirst(), (*i).getSecond() ) );
-                }
- 
-                
-                // if the Y value of the point being tested is also the Y of the second point of the side...
-                if (p.getY() == (*i).getSecond().getY())
-                {
-                        //if it isn't the last side, and this side and the next strattle that y value, add a node
-                        if (i != s.end()-1)
-                        {
-                                if ((*i).getFirst().getY() < p.getY() && (*(i+1)).getSecond().getY() > p.getY() ||
-                                    (*i).getFirst().getY() > p.getY() && (*(i+1)).getSecond().getY() < p.getY() )
-                                {
-					std::cout << "Adding node based on this side: " <<
-						(*i).getFirst().getX() << ", " << (*i).getFirst().getY() << " -> " <<
-						(*i).getSecond().getX() << ", " << (*i).getSecond().getY() << 
-						".... point = " << p.getX() << ", " << p.getY() << std::endl;
-
-                                        nodeSides.push_back( side ( (*i).getFirst(), (*i).getSecond() ) );
-                                }       
-                        }       
- 
-                        //if it is the last side, and this side and the first side strattle that y value, add a node
-                        else if ((*i).getFirst().getY() < p.getY() && s.front().getSecond().getY() > p.getY() ||
-                                 (*i).getFirst().getY() > p.getY() && s.front().getSecond().getY() < p.getY() )
-                        {
-				std::cout << "Adding node based on this side: " <<
-						(*i).getFirst().getX() << ", " << (*i).getFirst().getY() << " -> " <<
-						(*i).getSecond().getX() << ", " << (*i).getSecond().getY() << 
-						".... point = " << p.getX() << ", " << p.getY() << std::endl;
-
-                                nodeSides.push_back( side ( (*i).getFirst(), (*i).getSecond() ) );
-                        }
-
-			//if the sides don't strattle that y value, no nodes are added
-                }
-        }
- 
-	//take each side node, and find the x for the y value of the point
-        for (std::vector <side>::iterator i = nodeSides.begin(); i != nodeSides.end(); i++)
-        {
-		double x;
-
-		//if the line isn't vertical, determine x using y=mx+b
-		if ((*i).getSecond().getX() != (*i).getFirst().getX())
-		{	
-			double deltaY = (*i).getSecond().getY() - (*i).getFirst().getY();
-                	double deltaX = (*i).getSecond().getX() - (*i).getFirst().getX();
- 
-                	double slope = deltaY / deltaX;
-
-			double b = (*i).getSecond().getY() - (slope * (*i).getSecond().getX());
-        
-                	//x = ( p.getY() - (*i).getSecond().getY() + (slope * (*i).getSecond().getX()) ) / slope;
-
-			x = (p.getY() - b)/slope;
-			
-		}
-
-		else
-		{
-			x = (*i).getSecond().getX();
-		}
- 
-			
-			std::cout << "x from " << 
-				(*i).getFirst().getX() << ", " << (*i).getFirst().getY() << " -> " <<
-				(*i).getSecond().getX() << ", " << (*i).getSecond().getY() << 
-				" = " << x << std::endl;
-		
-                if (x < p.getX()) 
-                {
-                        toleft++;
-                }
- 
-                else
-                {
-                        toright++;
-                }
-        }
- 
-        
-        if (toleft % 2 == 0)
-        {
-                return false;
-        }
- 
-        else
-        {
-		std::cout << "Analysis: " << toleft << " nodes to the left, " << toright << " nodes to the right." << std::endl;
-                return true;
-        }
-}
+		return intersections_left % 2 == 0;
+	}
 
 	date::date(int y, int m, int d)
 	{
