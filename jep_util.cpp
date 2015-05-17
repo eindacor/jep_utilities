@@ -43,58 +43,10 @@ namespace jep
 		return glm::vec2(x, y);
 	}
 
-	bool pointInPolygon(const std::vector<glm::vec2> &polygon_points, const glm::vec2 &test_point)
-	{
-		pair<glm::vec2, glm::vec2> horizontal_line(test_point, test_point + glm::vec2(1.0f, 0.0f));
-
-		int intersections_left = 0;
-
-		for (std::vector<glm::vec2>::const_iterator it = polygon_points.cbegin(); it != polygon_points.cend(); it++)
-		{
-			std::vector<glm::vec2>::const_iterator next;
-
-			if (it + 1 == polygon_points.cend())
-				next = polygon_points.cbegin();
-
-			else next = it + 1;
-
-			//skip horizontal lines, segments that don't cross the test line, and overlapping points
-			if ((*it).y > test_point.y == (*next).y > test_point.y || floatsAreEqual((*it).y, (*next).y) || (*it) == (*next))
-				continue;
-
-			if (floatsAreEqual((*it).x, (*next).x))
-			{
-				if ((*it).x < test_point.x)
-					intersections_left++;
-
-				continue;
-			}
-
-			glm::vec2 first(*it);
-			glm::vec2 second(*next);
-
-			float delta_y(second.y - first.y);
-			float delta_x(second.x - first.x);
-			float slope = delta_y / delta_x;
-
-			float new_delta_y = test_point.y - first.y;
-			float new_delta_x = new_delta_y / slope;
-
-			float intersection_x = first.x + new_delta_x;
-
-			if (intersection_x < test_point.x)
-				intersections_left++;
-		}
-
-		return intersections_left % 2 == 0;
-	}
-
 	bool pointInPolygon(const vector< pair<glm::vec3, glm::vec3> > &polygon_sides, const glm::vec2 &test_point)
 	{
-		pair<glm::vec2, glm::vec2> horizontal_line(test_point, test_point + glm::vec2(1.0f, 0.0f));
-
+		pair<glm::vec2, glm::vec2> horizontal_line(test_point, glm::vec2(test_point.x + 1.0f, test_point.y));
 		int intersections_left = 0;
-
 		for (vector< pair<glm::vec3, glm::vec3> >::const_iterator it = polygon_sides.cbegin(); it != polygon_sides.cend(); it++)
 		{
 			glm::vec3 first_point = (*it).first;
@@ -127,8 +79,24 @@ namespace jep
 			if (intersection_x < test_point.x)
 				intersections_left++;
 		}
+		return intersections_left % 2 != 0;
+	}
 
-		return intersections_left % 2 == 0;
+	bool pointInPolygon(const std::vector<glm::vec2> &polygon_points, const glm::vec2 &test_point)
+	{
+		std::vector<pair<glm::vec3, glm::vec3> > lines;
+		for (std::vector<glm::vec2>::const_iterator it = polygon_points.begin(); it != polygon_points.cend(); it++)
+		{
+			std::vector<glm::vec2>::const_iterator next;
+			if (it == polygon_points.cend() - 1)
+				next = polygon_points.begin();
+
+			else next = it + 1;
+
+			lines.push_back(pair<glm::vec3, glm::vec3>(glm::vec3((*it).x, (*it).y, 0.0f), glm::vec3((*next).x, (*next).y, 0.0f)));
+		}
+
+		return pointInPolygon(lines, test_point);
 	}
 
 	date::date(int y, int m, int d)
